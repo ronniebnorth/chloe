@@ -346,7 +346,6 @@ const loadMode = (notes, labels, divColor) => {
     ctx.translate(radius, radius);
     radius = radius * 0.90
     createScaleView(notes,labels,divColor);
-    canvas.addEventListener('mousemove', on_mousemove, false);
     canvas.addEventListener('mousedown', on_click, false);
     document.getElementById('scaleViewModal').style.display = 'block';
 }
@@ -569,79 +568,6 @@ const isClose = (a,b) => {
 
 }
 
-
-const on_mousemove = (ev) => {
-    /*
-    var x, y;
-
-    if (ev.layerX || ev.layerX == 0) { 
-      x = ev.layerX;
-      y = ev.layerY;
-    }
-    
-    x -= 150;
-    y -= 150;
-    y -= document.documentElement.scrollTop;
-    //console.log('scroll', document.documentElement.scrollTop);
-    //console.log(x,y);
-
-    if(isClose(0, x) && isClose(-115, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[0].replace('♭','b');
-    }else if(isClose(60, x) && isClose(-100, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[1].replace('♭','b');     
-    }else if(isClose(100, x) && isClose(-60, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[2].replace('♭','b');           
-    }else if(isClose(115, x) && isClose(0, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[3].replace('♭','b');           
-    }else if(isClose(100, x) && isClose(60, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[4].replace('♭','b');         
-    }else if(isClose(60, x) && isClose(100, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[5].replace('♭','b');           
-    }else if(isClose(0, x) && isClose(115, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[6].replace('♭','b');         
-    }else if(isClose(-60, x) && isClose(100, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[7].replace('♭','b');           
-    }else if(isClose(-100, x) && isClose(60, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[8].replace('♭','b');           
-    }else if(isClose(-115, x) && isClose(0, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[9].replace('♭','b');          
-    }else if(isClose(-100, x) && isClose(-60, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[10].replace('♭','b');           
-    }else if(isClose(-60, x) && isClose(-100, y)){
-        document.body.style.cursor = 'pointer';
-        inNote=true;
-        clickedNote = viewNotes[11].replace('♭','b');           
-    }else{
-        document.body.style.cursor = '';
-        inNote=false;      
-        clickedNote = '';
-    }
-
-*/
-
-  }
   
 const on_click = (ev) => {
     var x, y;
