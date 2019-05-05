@@ -9,55 +9,86 @@ let tetratonicScales = [];
 let tritonicScales = [];
 
 let lastVelocity = 90;
-let lastGroup = "";
+let lastGroup = '';
 
-let clickedNote = "";
+let clickedNote = '';
 let inNote = false;
-let viewNotes = "";
+let viewNotes = '';
 let stuckButton = false;
 
-let instrumentName = "acoustic_grand_piano";
-//"dulcimer" //metallic pipes
-//"celesta"; //robotic
-//"acoustic_grand_piano";
-//"honkytonk_piano";
-//"xylophone";
-//let instrumentName = "acoustic_guitar_nylon";
+let instrumentName = 'acoustic_grand_piano';
+//'dulcimer' //metallic pipes
+//'celesta'; //robotic
+//'acoustic_grand_piano';
+//'honkytonk_piano';
+//'xylophone';
+//let instrumentName = 'acoustic_guitar_nylon';
 
 let timeOut = false;
 
 let firstLoad = true;
 
-loadMidi(instrumentName);
+document.addEventListener('DOMContentLoaded', function () {
+    loadMidi(instrumentName);
 
-function loadMidi(instrumentName){
+    document.body.addEventListener('click', function (evt) {
+        const classList = evt.target.classList;
+        if (classList.contains('btn_key')) { //did use mousedown for some reason
+            keyPress(evt.target);
+        }else if (classList.contains('instrument_name')) {
+            loadMidi(evt.target.value);
+        }else if (classList.contains('spn_key')) {
+            viewScale(evt.target);
+        }else if (classList.contains('closeModal2')) {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+    }, false);
+
+    document.getElementById('closeModal').addEventListener('click', function (evt) {
+        document.getElementById('scaleViewModal').style.display = 'none';
+    }, false);
+    document.getElementById('helpLabel').addEventListener('click', function (evt) {
+        document.getElementById('helpModal').style.display = 'block';
+    }, false);
+    document.getElementById('lbl_mode_filter').addEventListener('click', function (evt) {
+        let clear = true;
+        filterScales(clear);
+    }, false);
+    document.getElementById('rotateMode').addEventListener('click', function (evt) {
+        rotateScaleViewRoot();
+    }, false);
+    document.getElementById('mode_filter').addEventListener('keyup', function (evt) {
+        filterScales(false);
+    }, false);
+});
+
+const loadMidi = (instrumentName) => {
     MIDI.loadPlugin({
-        soundfontUrl: "./soundfont/",
+        soundfontUrl: './soundfont/',
         instrument: instrumentName,
-        //instruments: [ "acoustic_grand_piano", "acoustic_guitar_nylon" ],
+        //instruments: [ 'acoustic_grand_piano', 'acoustic_guitar_nylon' ],
         //targetFormat: 'mp3',
         onprogress: function(state, progress) {
-            //console.log(state, progress);
         },
         onsuccess: function() {
             MIDI.programChange(0, MIDI.GM.byName[instrumentName].number);
             /*MIDI.setEffects([
                 {
-                    type: "MoogFilter",
+                    type: 'MoogFilter',
                     bufferSize: 4096,
                     bypass: false,
                     cutoff: 0.065,
                     resonance: 3.5
                 },
                 {
-                    type: "Bitcrusher",
+                    type: 'Bitcrusher',
                     bits: 4,
                     bufferSize: 4096,
                     bypass: false,
                     normfreq: 0.1
                 },
                 {
-                    type: "Phaser",
+                    type: 'Phaser',
                     rate: 1.2, // 0.01 to 8 is a decent range, but higher values are possible
                     depth: 0.3, // 0 to 1
                     feedback: 0.2, // 0 to 1+
@@ -65,13 +96,13 @@ function loadMidi(instrumentName){
                     baseModulationFrequency: 700, // 500 to 1500
                     bypass: 0
                 }, {
-                    type: "Chorus",
+                    type: 'Chorus',
                     rate: 1.5,
                     feedback: 1.2,
                     delay: 1.1045,
                     bypass: 0
                 }, {
-                    type: "Delay",
+                    type: 'Delay',
                     feedback: 0.45, // 0 to 1+
                     delayTime: 150, // how many milliseconds should the wet signal be delayed? 
                     wetLevel: 0.25, // 0 to 1+
@@ -79,14 +110,14 @@ function loadMidi(instrumentName){
                     cutoff: 20, // cutoff frequency of the built in highpass-filter. 20 to 22050
                     bypass: 0
                 }, {
-                    type: "Overdrive",
+                    type: 'Overdrive',
                     outputGain: 0.5, // 0 to 1+
                     drive: 0.7, // 0 to 1
                     curveAmount: 1, // 0 to 1
                     algorithmIndex: 0, // 0 to 5, selects one of our drive algorithms
                     bypass: 0
                 }, {
-                    type: "Compressor",
+                    type: 'Compressor',
                     threshold: 0.5, // -100 to 0
                     makeupGain: 1, // 0 and up
                     attack: 1, // 0 to 1000
@@ -96,34 +127,34 @@ function loadMidi(instrumentName){
                     automakeup: true, // true/false
                     bypass: 0
                 }, {
-                    type: "Convolver",
+                    type: 'Convolver',
                     highCut: 22050, // 20 to 22050
                     lowCut: 20, // 20 to 22050
                     dryLevel: 1, // 0 to 1+
                     wetLevel: 1, // 0 to 1+
                     level: 1, // 0 to 1+, adjusts total output of both wet and dry
-                    impulse: "./inc/tuna/impulses/impulse_rev.wav", // the path to your impulse response
+                    impulse: './inc/tuna/impulses/impulse_rev.wav', // the path to your impulse response
                     bypass: 0
                 }, {
-                    type: "Filter",
+                    type: 'Filter',
                     frequency: 20, // 20 to 22050
                     Q: 1, // 0.001 to 100
                     gain: 0, // -40 to 40
                     bypass: 1, // 0 to 1+
                     filterType: 0 // 0 to 7, corresponds to the filter types in the native filter node: lowpass, highpass, bandpass, lowshelf, highshelf, peaking, notch, allpass in that order
                 }, {
-                    type: "Cabinet",
+                    type: 'Cabinet',
                     makeupGain: 1, // 0 to 20
-                    impulsePath: "./inc/tuna/impulses/impulse_guitar.wav", // path to your speaker impulse
+                    impulsePath: './inc/tuna/impulses/impulse_guitar.wav', // path to your speaker impulse
                     bypass: 0
                 }, {
-                    type: "Tremolo",
+                    type: 'Tremolo',
                     intensity: 0.3, // 0 to 1
                     rate: 0.1, // 0.001 to 8
                     stereoPhase: 0, // 0 to 180
                     bypass: 0
                 }, {
-                    type: "WahWah",
+                    type: 'WahWah',
                     automode: true, // true/false
                     baseFrequency: 0.5, // 0 to 1
                     excursionOctaves: 2, // 1 to 6
@@ -136,15 +167,13 @@ function loadMidi(instrumentName){
             if(firstLoad){
                 run();
             }
-            firstLoad = false;
-            
+            firstLoad = false;      
         }
     });
 }
 
 
-
-function loopKey(){
+const loopKey = () => {
     if(stuckButton !== false){
         playKey(stuckButton);
         timeOut = setTimeout( function() { loopKey(); }, 2400)
@@ -152,54 +181,27 @@ function loopKey(){
     
 }
 
-$(function() {
-    $('body').on('mousedown', '.btn_key', function() {
-        let btn = $(this);
-        if(stuckButton !== false){
-            //stuckButton.css("color","white");
-            stuckButton.removeClass("blink");
-            if(stuckButton.text() === btn.text() && stuckButton.closest('div').attr('data') === btn.closest('div').attr('data')){
-                stuckButton = false;
-                return;
-            }
+
+const keyPress = (btn) => {
+    if (stuckButton !== false) {
+        stuckButton.classList.remove('blink');
+        if (stuckButton.textContent === btn.textContent
+            && stuckButton.closest('div').getAttribute('data') === btn.closest('div').getAttribute('data')) {
             stuckButton = false;
-            //return;
+            return;
         }
-        stuckButton = btn;
-        //stuckButton.css("color","white");
-        stuckButton.addClass("blink");
-        let msecs = 2400;
-        playKey(stuckButton);
-
-        clearTimeout(timeOut);
-        timeOut = setTimeout( function() { loopKey(); }, 2400);
-        //for(let i = 1; i < 4; i++){
-            //setTimeout(function(){ playKey(btn); }, msecs * i);
-        //}
-    });
-
-    $('body').on('click', '.instrument_name', function() {loadMidi($(this).val());});
-
-    $('body').on('click', '.spn_key', function() {viewScale($(this));});
-
-    $('body').on('click', '#closeModal', function() {$("#scaleViewModal").hide();});
-
-    $('body').on('click', '.closeModal2', function() {$("#helpModal").hide();});
-
-    $('body').on('click', '#helpLabel', function() {$("#helpModal").show();});
-
-    $('body').on('keyup', '#mode_filter', function() {filterScales(false);});
-
-    $('body').on('click', '#lbl_mode_filter', function() {
-        let clear = true;
-        filterScales(clear);});
-
-    $('body').on('click', '#rotateMode', function(){rotateScaleViewRoot();});
-
-});
+        stuckButton = false;
+    }
+    stuckButton = btn;
+    stuckButton.classList.add('blink');
+    const msecs = 2400;
+    playKey(stuckButton);
+    clearTimeout(timeOut);
+    timeOut = setTimeout(function () { loopKey(); }, msecs);
+}
 
 
-function run(){
+const run = () => {
     octatonicScales.group = 'oct';
     heptatonicScales.group = 'hep';
     hexatonicScales.group = 'hex';
@@ -214,60 +216,53 @@ function run(){
     tetratonicScales = getScales(tetratonicScales, 4);
     tritonicScales = getScales(tritonicScales, 3);
 
-    let canvas = document.getElementById("canvas");
-
-    let ctx = canvas.getContext("2d");
-    let radius = canvas.height / 2;
-
     makeUI();
-
     initFilters();
-
-    $("#imgLoad").hide();
+    document.getElementById('imgLoad').style.display = 'none';
 }
 
 
-function playKey(key){
-    let rootNote = key.text().replace('♭','b');
-    let mode = key.closest("div").attr('data');
-    let notes = getNotes(rootNote, mode.split(","));
+const playKey = (key) => {
+    const rootNote = key.textContent.replace('♭', 'b');
+    const mode = key.closest('div').getAttribute('data');
+    const notes = getNotes(rootNote, mode.split(','));
     playMode(rootNote, notes);
 }
 
 
-function viewScale(spn){
-    let spnTxt = spn.text();
-    let binStr = spnTxt.substring(0,12);
-    let newlabels = clone(chromatic_labels);
-    $("#modeInfo").text(spnTxt);
-    let divColor = spn.closest("div").css("background-color");
+const viewScale = (spn) => {
+    const spnTxt = spn.textContent;
+    const binStr = spnTxt.substring(0,12);
+    const newlabels = clone(chromatic_labels);
+    const divColor = spn.closest('div').style.backgroundColor; 
     viewNotes = binStr;
-
-    loadMode(binStr.split(""), newlabels, divColor);    
+    document.getElementById('modeInfo').textContent = spnTxt;
+    loadMode(binStr.split(''), newlabels, divColor);    
 }
 
 
-function filterScales(clear){
+const filterScales = (clear) => {
     if(clear){
-        $("#mode_filter").val("");
+        document.getElementById('mode_filter').value = '';
     }
-    let input = $("#mode_filter").val();
+    const input = document.getElementById('mode_filter').value;
     if (history.pushState) {
-        let newurl = window.location.protocol + "//" 
+        let newurl = window.location.protocol + '//' 
             + window.location.host + window.location.pathname + '?filter=' + input;
         window.history.pushState({path:newurl},'',newurl);
     }
-    if(input === ""){
-        $('.mdv').show();
-        $('.spacer').show();
-        $('#lbl_mode_filter').text("Filter");
+    if (input === '') {
+        document.querySelectorAll('.mdv').forEach(a => a.style.display = 'block');
+        document.querySelectorAll('.spacer').forEach(a => a.style.display = 'block');
+        document.getElementById('lbl_mode_filter').textContent = 'Filter';
         return;
     }else{
-        $('#lbl_mode_filter').text("Clear");
+        document.getElementById('lbl_mode_filter').textContent = 'Clear';
     }
-    let inputArr = input.split(",");
-    
-    $(".spn_key").each(function(index){
+    const inputArr = input.split(',');
+
+    //document.querySelectorAll('.spn_key').forEach(function (index) {
+    $('.spn_key').each(function(index){
         let found = false;
         for(let i = 0; i < inputArr.length; i++){
             if(inputArr[i].length > 0 && $(this).text().indexOf(inputArr[i]) !== -1){
@@ -276,92 +271,99 @@ function filterScales(clear){
             }
         }
         if(found){
-            $(this).closest("div")
+            $(this).closest('div')
                 .show()
-                .next(".spacer").show();
+                .next('.spacer').show();
         }else{
-            $(this).closest("div")
+            $(this).closest('div')
             .hide()
-            .next(".spacer").hide();
+            .next('.spacer').hide();
         }
     });
 }
 
 
 
-function rotateScaleViewRoot(){
-    let notes = $("#canvas").attr('notes').split("");
-    let labels = $("#canvas").attr('note_labels').split(",");
-    let divColor = $("#canvas").attr('div_color');
-    let newlabels = [];
-    let mem = labels[0];
+const rotateScaleViewRoot = () => {
+    const notes = document.getElementById('canvas').getAttribute('notes').split('');
+    const labels = document.getElementById('canvas').getAttribute('note_labels').split(',');
+    const divColor = document.getElementById('canvas').getAttribute('div_color');
+
+    const newlabels = [];
+    const mem = labels[0];
     for(let i = 1; i < labels.length; i++){
         newlabels.push(labels[i]);
     }
     newlabels.push(mem);
-    $("#canvas").attr('note_labels', newlabels.join(","));
+    document.getElementById('canvas').setAttribute('note_labels', newlabels.join(','));
     loadMode(notes, newlabels, divColor);
 }
 
 
-function initFilters(){
+const initFilters = () => {
     try{
-    String.prototype.replaceAll = function(search, replacement) {
-        let target = this;
-        return target.replace(new RegExp(search, 'g'), replacement);
-    };
+        String.prototype.replaceAll = function(search, replacement) {
+            let target = this;
+            return target.replace(new RegExp(search, 'g'), replacement);
+        };
 
-    let parseQueryString = function(url) {
-        let urlParams = {};
-        url.replace(
-            new RegExp("([^?=&]+)(=([^&]*))?", "g"),
-            function($0, $1, $2, $3) {
-                urlParams[$1] = $3;
-            }
-        );
-        return urlParams;
-    }
-    let urlToParse = location.search;  
-    let result = parseQueryString(urlToParse );  
-    let searchTerm = result.filter;
-    searchTerm = searchTerm.replaceAll("%2C", ",");
-
-        if(searchTerm.length > 1){
-            $("#mode_filter").val(searchTerm);
-            $("#mode_filter").keyup();
+        const parseQueryString = (url) => {
+            let urlParams = {};
+            url.replace(
+                new RegExp('([^?=&]+)(=([^&]*))?', 'g'),
+                function($0, $1, $2, $3) {
+                    urlParams[$1] = $3;
+                }
+            );
+            return urlParams;
+        }
+        const urlToParse = location.search;  
+        const result = parseQueryString(urlToParse );
+            
+        let searchTerm = result.filter;
+            
+        searchTerm = searchTerm.replaceAll('%2C', ',');
+       
+        if (searchTerm.length > 1) {
+            document.getElementById('mode_filter').value = searchTerm;
+            filterScales(false);
         }
     }catch(e){}
     return true;
 }
 
 
-function loadMode(notes, labels, divColor){
+const loadMode = (notes, labels, divColor) => {
     viewNotes = labels;
-    $("#canvas").remove();
-    $("#scaleViewModalContent").append('<canvas div_color="' + divColor + '" modeInfo="" note_labels="' + labels + '" notes="' + notes.join("") + '" id="canvas" width="300" height="300" style="background-color:#000"></canvas>');
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");   
+    document.getElementById('canvas').remove();
+    let wrapper = document.createElement('div');
+    wrapper.innerHTML = '<canvas div_color="' + divColor + '" modeInfo="" note_labels="' + labels
+        + '" notes="' + notes.join("") + '" id="canvas" width="300" height="300" style="background-color:#000"></canvas>';
+    let div = wrapper.firstChild;
+    document.getElementById('scaleViewModalContent').appendChild(div);
+    canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');   
     radius = canvas.height / 2;
     ctx.translate(radius, radius);
     radius = radius * 0.90
     createScaleView(notes,labels,divColor);
-    canvas.addEventListener("mousemove", on_mousemove, false);
-    canvas.addEventListener("mousedown", on_click, false);
-    $("#scaleViewModal").show();
+    canvas.addEventListener('mousemove', on_mousemove, false);
+    canvas.addEventListener('mousedown', on_click, false);
+    document.getElementById('scaleViewModal').style.display = 'block';
 }
 
-function createScaleView(notes,labels,divColor) {
+const createScaleView = (notes,labels,divColor) => {
     drawFace(ctx, radius);
     drawNotes(ctx, radius, notes,labels,divColor);
 
 }
 
-function drawNotes(ctx, radius, notes, labels,divColor) {
+const drawNotes = (ctx, radius, notes, labels,divColor) => {
     let ang;
     let num;
     
-    ctx.textBaseline="middle";
-    ctx.textAlign="center";
+    ctx.textBaseline='middle';
+    ctx.textAlign='center';
     
     for(num= 0; num < 12; num++){
         ang = num * Math.PI / 6;
@@ -382,12 +384,12 @@ function drawNotes(ctx, radius, notes, labels,divColor) {
             ctx.fill();
         }
 
-        ctx.fillStyle = "white";
+        ctx.fillStyle = 'white';
         if(num === 0){
-            ctx.font = radius*0.20 + "px arial";
+            ctx.font = radius*0.20 + 'px arial';
             ctx.fillStyle = divColor;
          }else{
-            ctx.font = radius*0.15 + "px arial";
+            ctx.font = radius*0.15 + 'px arial';
             ctx.fillStyle = '#9a929e';
          }
         if(notes[num] === '1'){ 
@@ -404,37 +406,37 @@ function drawNotes(ctx, radius, notes, labels,divColor) {
     ctx.beginPath();
     ctx.moveTo(0, -100);
 
-    if(notes[1] === "1"){
+    if(notes[1] === '1'){
         ctx.lineTo(50, -85);
     }
-    if(notes[2] === "1"){
+    if(notes[2] === '1'){
         ctx.lineTo(85, -50);
     }   
-    if(notes[3] === "1"){
+    if(notes[3] === '1'){
         ctx.lineTo(100, 0);
     }  
-    if(notes[4] === "1"){
+    if(notes[4] === '1'){
         ctx.lineTo(85, 50);
     }  
-    if(notes[5] === "1"){
+    if(notes[5] === '1'){
         ctx.lineTo(50,85);
     }  
-    if(notes[6] === "1"){
+    if(notes[6] === '1'){
         ctx.lineTo(0,100);
     }  
-    if(notes[7] === "1"){
+    if(notes[7] === '1'){
         ctx.lineTo(-50, 85);
     }  
-    if(notes[8] === "1"){
+    if(notes[8] === '1'){
         ctx.lineTo(-85, 50);
     }  
-    if(notes[9] === "1"){
+    if(notes[9] === '1'){
         ctx.lineTo(-100, 0);
     }  
-    if(notes[10] === "1"){
+    if(notes[10] === '1'){
         ctx.lineTo(-85, -50);
     }  
-    if(notes[11] === "1"){
+    if(notes[11] === '1'){
         ctx.lineTo(-50,-85);
     }  
 
@@ -444,7 +446,7 @@ function drawNotes(ctx, radius, notes, labels,divColor) {
     
 }
 
-function drawFace(ctx, radius) {
+const drawFace = (ctx, radius) => {
     let grad;
 
     ctx.beginPath();
@@ -463,7 +465,7 @@ function drawFace(ctx, radius) {
 }
 
 
-function playMode(rootNote, notesArr, oct="X"){    
+const playMode = (rootNote, notesArr, oct='X') => {    
 
     notesArr = shuffle(notesArr);
 
@@ -489,9 +491,9 @@ function playMode(rootNote, notesArr, oct="X"){
     let ctxtime = MIDI.getContext().currentTime;
     
 
-    let channel = 0;
+    const channel = 0;
 
-    let velocity = lastVelocity;
+    const velocity = lastVelocity;
 
     if(Math.floor(Math.random() * 3) === 1){
         //velocity = 100; //
@@ -499,13 +501,13 @@ function playMode(rootNote, notesArr, oct="X"){
         lastVelocity = velocity;
     }
 
-    if(oct == "X"){
+    if(oct == 'X'){
         rootNote = getRandomRootOctave(rootNote);
     }else{
         rootNote = rootNote + oct;
     }
 
-    let rootNoteStr = MIDI.keyToNote[rootNote];
+    const rootNoteStr = MIDI.keyToNote[rootNote];
 
     if($('input[name=play_style]:checked').val() !== 'just_fills'){
         MIDI.noteOn(channel, rootNoteStr, velocity,0);
@@ -523,24 +525,24 @@ function playMode(rootNote, notesArr, oct="X"){
         console.log('delay',delay);
         for(let i=0; i < notes.length; i++){
             console.log('time', ctxtime+tmpdelay);
-            let chordIt = Math.floor(Math.random() * 3);
+            const chordIt = Math.floor(Math.random() * 3);
             if(chordIt === 1){
-                let chordIt2 = Math.floor(Math.random() * 3);
+                const chordIt2 = Math.floor(Math.random() * 3);
                 if(chordIt2 === 1){
-                    let harm2 = Math.floor(Math.random() * (notes.length - 1));
-                    let harm3 = Math.floor(Math.random() * (notes.length - 1));
-                    let note1 = notes[i];
-                    let note2 = notes[harm2];
-                    let note3 = notes[harm3];
+                    const harm2 = Math.floor(Math.random() * (notes.length - 1));
+                    const harm3 = Math.floor(Math.random() * (notes.length - 1));
+                    const note1 = notes[i];
+                    const note2 = notes[harm2];
+                    const note3 = notes[harm3];
                     console.log('chord', note1, note2,note3);
 
                     MIDI.chordOn(channel, [note1,note2,note3], velocity / 2, ctxtime+tmpdelay);
                     MIDI.chordOff(channel, [note1,note2,note3], 4);
                 }else{
 
-                    let harm = Math.floor(Math.random() * (notes.length - 1));
-                    let note1 = notes[i];
-                    let note2 = notes[harm];
+                    const harm = Math.floor(Math.random() * (notes.length - 1));
+                    const note1 = notes[i];
+                    const note2 = notes[harm];
                     MIDI.chordOn(channel, [note1,note2], velocity / 2, ctxtime+tmpdelay);
                     MIDI.chordOff(channel, [note1,note2], 4);
                     console.log('small chord', note1, note2);
@@ -560,7 +562,7 @@ function playMode(rootNote, notesArr, oct="X"){
 }
 
 
-function isClose(a,b){
+const isClose = (a,b) => {
     if(b < a-20 || b > a+20){
         return false;
     }
@@ -569,7 +571,7 @@ function isClose(a,b){
 }
 
 
-function on_mousemove (ev) {
+const on_mousemove = (ev) => {
     /*
     var x, y;
 
@@ -585,64 +587,64 @@ function on_mousemove (ev) {
     //console.log(x,y);
 
     if(isClose(0, x) && isClose(-115, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[0].replace('♭','b');
     }else if(isClose(60, x) && isClose(-100, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[1].replace('♭','b');     
     }else if(isClose(100, x) && isClose(-60, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[2].replace('♭','b');           
     }else if(isClose(115, x) && isClose(0, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[3].replace('♭','b');           
     }else if(isClose(100, x) && isClose(60, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[4].replace('♭','b');         
     }else if(isClose(60, x) && isClose(100, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[5].replace('♭','b');           
     }else if(isClose(0, x) && isClose(115, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[6].replace('♭','b');         
     }else if(isClose(-60, x) && isClose(100, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[7].replace('♭','b');           
     }else if(isClose(-100, x) && isClose(60, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[8].replace('♭','b');           
     }else if(isClose(-115, x) && isClose(0, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[9].replace('♭','b');          
     }else if(isClose(-100, x) && isClose(-60, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[10].replace('♭','b');           
     }else if(isClose(-60, x) && isClose(-100, y)){
-        document.body.style.cursor = "pointer";
+        document.body.style.cursor = 'pointer';
         inNote=true;
         clickedNote = viewNotes[11].replace('♭','b');           
     }else{
-        document.body.style.cursor = "";
+        document.body.style.cursor = '';
         inNote=false;      
-        clickedNote = "";
+        clickedNote = '';
     }
 
 */
 
   }
   
-function on_click(ev) {
+const on_click = (ev) => {
     var x, y;
     
         if (ev.layerX || ev.layerX == 0) { 
@@ -702,8 +704,8 @@ function on_click(ev) {
            
             inNote=true;
             clickedNote = viewNotes[7].replace('♭','b');       
-            if(clickedNote === 'Gb' || clickedNote.charAt(0) === 'F' || clickedNote.charAt(0) === 'E' || clickedNote.charAt(0) === 'C' 
-            || clickedNote.charAt(0) === 'D'){
+            if (clickedNote === 'Gb' || clickedNote.charAt(0) === 'F' || clickedNote.charAt(0) === 'E'
+                || clickedNote.charAt(0) === 'C' || clickedNote.charAt(0) === 'D'){
                 oct = '3';
             }          
         }else if(isClose(-100, x) && isClose(60, y)){
@@ -745,7 +747,7 @@ function on_click(ev) {
         }else{
 
             inNote=false;      
-            clickedNote = "";
+            clickedNote = '';
         }
 
     if (inNote)  {
@@ -757,9 +759,9 @@ function on_click(ev) {
 
   
 
-function multiDimensionalUnique(arr) {
-    let uniques = [];
-    let itemsFound = {};
+const multiDimensionalUnique = (arr) => {
+    const uniques = [];
+    const itemsFound = {};
     for(let i = 0, l = arr.length; i < l; i++) {
         let stringified = JSON.stringify(arr[i]);
         if(itemsFound[stringified]) { continue; }
@@ -769,22 +771,22 @@ function multiDimensionalUnique(arr) {
     return uniques;
 }
 
-function getNotes(rootNote, mode){
-    let chrome = R.concat(chromatic, chromatic);
-    let start = chrome.indexOf(rootNote);
-    let notes = [];
+const getNotes = (rootNote, mode) => {
+    const chrome = R.concat(chromatic, chromatic);
+    const start = chrome.indexOf(rootNote);
+    const notes = [];
     for(let i = 0; i < 13; i++){
         if(mode[i] === '1'){
 
-            let key = chrome[start + i] + '4';
-            let note = MIDI.keyToNote[key]
+            const key = chrome[start + i] + '4';
+            const note = MIDI.keyToNote[key]
             notes.push(note);
         }
     }
     return notes;
 }
 
-function perc2color(perc) {
+const perc2color = (perc) => {
 	let r, g, b = 0;
 	if(perc < 50) {
 		r = Math.round(5.1 * perc);
@@ -796,18 +798,18 @@ function perc2color(perc) {
         r = 150;
         b = 255;
 	}
-	let h = r * 0x10000 + g * 0x100 + b * 0x1;
+    const h = r * 0x10000 + g * 0x100 + b * 0x1;
 	return '#' + ('000000' + h.toString(16)).slice(-6);
 }
 
 
-function makeModeUI(modes, div){
-    let colorPercent = 100;
+
+const makeModeUI = (modes, div) => {
     modes = multiDimensionalUnique(modes);
     div.append('<div class="spacer" style="height:8px"></div>');
     for(let i = 0; i < modes.length; i++){
         let mode = modes[i];
-        let num  = parseInt(mode.join(""),2);
+        let num  = parseInt(mode.join(''),2);
         num2 = num - 2050;
         num2 = num2 / 15;
         let bgcolor = perc2color(num2);
@@ -817,14 +819,15 @@ function makeModeUI(modes, div){
         }
         let newdiv = $('<div class="mdv" data="' + mode + '" style="background-color:' + bgcolor + '"></div>');
         div.append(newdiv);
-        //parseInt(mode.join(""), 2).toString(12) + 
-        newdiv.append('<span class="spn_key">' + mode.join("") + ' (' + num + ') ' + mode.group + '</span data=' + mode + '>')
-        .append($('#notes_template_container').html());
+        newdiv.append('<span class="spn_key">' + mode.join('') + ' (' + num + ') ' + mode.group + '</span data=' + mode + '>')
+        .append(document.getElementById('notes_template_container').innerHTML);
     }
 }
 
-function makeUI(){
-    let div = $("#scales_div");
+const makeUI = () => {
+    //let div = document.getElementById('scales_div');
+    
+    const div = $('#scales_div');
 
     makeModeUI(getModes(octatonicScales), div);
     makeModeUI(getModes(heptatonicScales), div);
@@ -837,13 +840,13 @@ function makeUI(){
 
 
 
-function getModes(scales){
+const getModes = (scales) => {
     let modes = [];
 
     for(let i = 0; i < scales.length; i++){
         let scale = scales[i];
         scale = R.concat(scale, scale);
-        let newmodes = [];
+        const newmodes = [];
        
         for(let j = 0; j < scale.length/2; j++){
             
@@ -864,41 +867,41 @@ function getModes(scales){
     return modes;
 }
 
-function revStr(s){
-    return s.split("").reverse().join("");
+const revStr = (s) => {
+    return s.split('').reverse().join('');
 }
 
-function count(string,char) {
-    var re = new RegExp(char,"gi");
+const count = (string,char) => {
+    var re = new RegExp(char,'gi');
     return string.match(re).length;
 }
 
-function arrayOfInts(strArr){
+const arrayOfInts = (strArr) => {
     for(var i=0; i<strArr.length; i++) { strArr[i] = +strArr[i]; } 
     return strArr;
 }
 
-function getScales(scalesArr, numNotes){
+const getScales = (scalesArr, numNotes) => {
 
-    let binStr = "".padStart(numNotes, "1");
-    binStr = binStr.padStart(12, "0");
-    let starts = parseInt(binStr, 2);
-    let ends = parseInt(revStr(binStr), 2);
+    let binStr = ''.padStart(numNotes, '1');
+    binStr = binStr.padStart(12, '0');
+    const starts = parseInt(binStr, 2);
+    const ends = parseInt(revStr(binStr), 2);
     for(let i = starts; i < ends; i++){
-        let nStr = i.toString(2).padStart(12, "0");
-        let dStr = R.concat(nStr,nStr);
+        const nStr = i.toString(2).padStart(12, '0');
+        const dStr = R.concat(nStr,nStr);
 
         if(dStr.search('111') === -1 && count(nStr,'1') === count(binStr,'1')){
             let exists = false;
             for(let j = 0; j < scalesArr.length; j++){
-                jScale = R.concat(scalesArr[j].join(""), scalesArr[j].join(""));
+                jScale = R.concat(scalesArr[j].join(''), scalesArr[j].join(''));
                 if(jScale.search(nStr) !== -1){
                     exists = true;
                     break;
                 }
             }
             if(!exists){
-                scalesArr.push(arrayOfInts(nStr.split("")));
+                scalesArr.push(arrayOfInts(nStr.split('')));
             }
         }
     }
@@ -906,7 +909,7 @@ function getScales(scalesArr, numNotes){
 }
 
 
-function shuffle(array) {
+const shuffle = (array) => {
     let currentIndex = array.length, temporaryValue, randomIndex;
     while (0 !== currentIndex) {
       randomIndex = Math.floor(Math.random() * currentIndex);
@@ -919,7 +922,7 @@ function shuffle(array) {
 }
 
 
-function checkScale(scale){
+const checkScale = (scale) => {
     for(let i = 0; i < scale.length; i++){
         if(scale[i] === 1 && scale[i+1] === 1 && scale[i+2] === 1){
             return false;
@@ -929,11 +932,11 @@ function checkScale(scale){
 }
 
 
-function fillModes(){
+const fillModes = () => {
     for(let i = 0; i < scales.length; i++){
-        let scale = scales[i];
-        let notesPerOctave = scale.notesPerOctave;
-        let notes = [];
+        const scale = scales[i];
+        const notesPerOctave = scale.notesPerOctave;
+        const notes = [];
         for(let j = 0; j < notesPerOctave; j++){
 
         }
@@ -941,19 +944,19 @@ function fillModes(){
 }        
 
 
-function randomlyRepeatNotes(notesArr){
+const randomlyRepeatNotes = (notesArr) => {
     notesArr = clone(notesArr);
-    let loopTimes = Math.floor(Math.random() * (notesArr.length));
+    const loopTimes = Math.floor(Math.random() * (notesArr.length));
     for(let lp = 0; lp < loopTimes; lp++){
-        let randomNote = Math.floor(Math.random() * (notesArr.length - 1));
+        const randomNote = Math.floor(Math.random() * (notesArr.length - 1));
         notesArr[randomNote + 1] = notesArr[randomNote];
     }
     return notesArr;
 }
 
-function randomlyReshuffle(notesArr){
+const randomlyReshuffle = (notesArr) => {
     notesArr = clone(notesArr);
-    let reshuf = Math.floor(Math.random() * 2);
+    const reshuf = Math.floor(Math.random() * 2);
     
     if(reshuf === 1){
         notesArr = shuffle(notesArr);
@@ -961,9 +964,9 @@ function randomlyReshuffle(notesArr){
     return notesArr;
 }
 
-function randomlyShortenPhrase(notesArr){
+const randomlyShortenPhrase = (notesArr) => {
     notesArr = clone(notesArr);
-    let doStrip =  Math.floor(Math.random() * 3);
+    const doStrip =  Math.floor(Math.random() * 3);
     if(doStrip === 1){
         let stripEnd = Math.floor(Math.random() * (notesArr.length - 1));
         while(stripEnd > 1){
@@ -974,14 +977,14 @@ function randomlyShortenPhrase(notesArr){
     return notesArr;
 }
 
-function randomlyPutHoles(notesArr){
+const randomlyPutHoles = (notesArr) => {
     notesArr = clone(notesArr);
-    let putHoles = Math.floor(Math.random() * 4);
+    const putHoles = Math.floor(Math.random() * 4);
     if(putHoles === 1 || putHoles === 2 || putHoles === 3){
         let numHoles = Math.floor(Math.random() * (notesArr.length - 3));
         numHoles = numHoles + 2;
         while(numHoles > 0){
-            let pHole = Math.floor(Math.random() * (notesArr.length - 1));
+            const pHole = Math.floor(Math.random() * (notesArr.length - 1));
             notesArr[pHole] = 0;
             numHoles--;
         }           
@@ -989,7 +992,7 @@ function randomlyPutHoles(notesArr){
     return notesArr;
 }
 
-function randomlyGoHalfTime(){      
+const randomlyGoHalfTime = () => {      
     let mydelayT = Math.floor(Math.random() * 2);
     let delayt = .3;
     if(mydelayT === 1){
@@ -998,8 +1001,8 @@ function randomlyGoHalfTime(){
     return delayt;
 }
 
-function getRandomRootOctave(note){
-    let rootOctR = Math.floor(Math.random() * 3);
+const getRandomRootOctave = (note) => {
+    const rootOctR = Math.floor(Math.random() * 3);
     if(rootOctR === 1){
         return note + '2';
     }else{
@@ -1007,7 +1010,7 @@ function getRandomRootOctave(note){
     }
 }
 
-function randomlyDoubleNotes(notes){
+const randomlyDoubleNotes = (notes) => {
     let connotes = clone(notes);
     if(Math.floor(Math.random() * 3) === 1){
         connotes.reverse();
@@ -1015,13 +1018,13 @@ function randomlyDoubleNotes(notes){
         connotes = shuffle(connotes);
     }
 
-    let bs = Math.floor(Math.random() * 3);
+    const bs = Math.floor(Math.random() * 3);
     if(bs === 0){
         notes = notes.concat(connotes);
     }
     return notes;
 }
 
-function clone(obj){
+const clone = (obj) => {
     return JSON.parse(JSON.stringify(obj));
 }
