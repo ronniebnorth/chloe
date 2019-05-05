@@ -176,9 +176,8 @@ const loadMidi = (instrumentName) => {
 const loopKey = () => {
     if(stuckButton !== false){
         playKey(stuckButton);
-        timeOut = setTimeout( function() { loopKey(); }, 2400)
+        timeOut = setTimeout(function () { loopKey(); }, 2400);
     }
-    
 }
 
 
