@@ -17,6 +17,12 @@ let viewNotes = '';
 let stuckButton = false;
 
 let instrumentName = 'acoustic_grand_piano';
+
+let bpm = 50;
+let tempo = 60000 / (bpm / 4);
+tempo = Math.round(tempo);
+//let tempo = 3000; //2400;
+
 //'dulcimer' //metallic pipes
 //'celesta'; //robotic
 //'acoustic_grand_piano';
@@ -33,14 +39,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.body.addEventListener('click', function (evt) {
         const classList = evt.target.classList;
+        if (classList.contains('instrument_name')) {
+            loadMidi(evt.target.value);
+        } else if (classList.contains('spn_key')) {
+            viewScale(evt.target);
+        } else if (classList.contains('closeModal2')) {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+    }, false);
+
+    document.body.addEventListener('mousedown', function (evt) {
+        const classList = evt.target.classList;
         if (classList.contains('btn_key')) { //did use mousedown for some reason
             keyPress(evt.target);
-        }else if (classList.contains('instrument_name')) {
-            loadMidi(evt.target.value);
-        }else if (classList.contains('spn_key')) {
-            viewScale(evt.target);
-        }else if (classList.contains('closeModal2')) {
-            document.getElementById('helpModal').style.display = 'none';
         }
     }, false);
 
@@ -174,14 +185,17 @@ const loadMidi = (instrumentName) => {
 
 
 const loopKey = () => {
+    console.log('loopKey function');
     if(stuckButton !== false){
         playKey(stuckButton);
-        timeOut = setTimeout(function () { loopKey(); }, 2400);
+        timeOut = setTimeout(function () { loopKey(); }, tempo);
     }
 }
 
 
 const keyPress = (btn) => {
+    console.log('keyPress function');
+
     if (stuckButton !== false) {
         stuckButton.classList.remove('blink');
         if (stuckButton.textContent === btn.textContent
@@ -193,7 +207,14 @@ const keyPress = (btn) => {
     }
     stuckButton = btn;
     stuckButton.classList.add('blink');
-    const msecs = 2400;
+
+    bpm = document.getElementById('bpm').value;
+    bpm = bpm < 10 ? 10 : bpm;
+    bpm = bpm > 200 ? 200 : bpm;
+
+    tempo = 60000 / (bpm / 4);
+    tempo = Math.round(tempo);
+    const msecs = tempo;
     playKey(stuckButton);
     clearTimeout(timeOut);
     timeOut = setTimeout(function () { loopKey(); }, msecs);
@@ -222,6 +243,14 @@ const run = () => {
 
 
 const playKey = (key) => {
+    console.log('playKey function');
+    // bpm = document.getElementById('bpm').value;
+    // bpm = bpm < 10 ? 10 : bpm;
+    // bpm = bpm > 200 ? 200 : bpm;
+
+    tempo = 60000 / (bpm / 4);
+    tempo = Math.round(tempo);
+
     const rootNote = key.textContent.replace('♭', 'b');
     const mode = key.closest('div').getAttribute('data');
     const notes = getNotes(rootNote, mode.split(','));
@@ -464,6 +493,7 @@ const drawFace = (ctx, radius) => {
 
 
 const playMode = (rootNote, notesArr, oct='X') => {    
+    console.log('playMode function');
 
     notesArr = shuffle(notesArr);
 
@@ -480,6 +510,7 @@ const playMode = (rootNote, notesArr, oct='X') => {
 
     
     let notes = notesArr;
+    console.log(notes);
     let delayt = randomlyGoHalfTime();
     if($('input[name=play_style]:checked').val() == 'chord'){
         delayt = 0;
@@ -487,7 +518,6 @@ const playMode = (rootNote, notesArr, oct='X') => {
     //let delay = Array(notes.length).fill(delayt);
     let tmpdelay= 0;
     let ctxtime = MIDI.getContext().currentTime;
-    
 
     const channel = 0;
 
@@ -508,21 +538,22 @@ const playMode = (rootNote, notesArr, oct='X') => {
     const rootNoteStr = MIDI.keyToNote[rootNote];
 
     if($('input[name=play_style]:checked').val() !== 'just_fills'){
-        MIDI.noteOn(channel, rootNoteStr, velocity,0);
+        MIDI.noteOn(channel, rootNoteStr, velocity, 0);
+        console.log('rootNote', rootNote);
+        console.log('channel', channel);
     }
     
 
-    if(delayt === .15){
+    if (delayt === tempo * .0000625){ //.15){
         notes = randomlyDoubleNotes(notes);
-        //notes = randomlyDoubleNotes(notes);
     }
     let delay = Array(notes.length).fill(delayt);
     
     if($('input[name=play_style]:checked').val() != 'root'){
-        console.log('notes',notes);
-        console.log('delay',delay);
+        //console.log('notes',notes);
+        //console.log('delay',delay);
         for(let i=0; i < notes.length; i++){
-            console.log('time', ctxtime+tmpdelay);
+            //console.log('time', ctxtime+tmpdelay);
             const chordIt = Math.floor(Math.random() * 3);
             if(chordIt === 1){
                 const chordIt2 = Math.floor(Math.random() * 3);
@@ -532,7 +563,7 @@ const playMode = (rootNote, notesArr, oct='X') => {
                     const note1 = notes[i];
                     const note2 = notes[harm2];
                     const note3 = notes[harm3];
-                    console.log('chord', note1, note2,note3);
+                    //console.log('chord', note1, note2,note3);
 
                     MIDI.chordOn(channel, [note1,note2,note3], velocity / 2, ctxtime+tmpdelay);
                     MIDI.chordOff(channel, [note1,note2,note3], 4);
@@ -543,7 +574,7 @@ const playMode = (rootNote, notesArr, oct='X') => {
                     const note2 = notes[harm];
                     MIDI.chordOn(channel, [note1,note2], velocity / 2, ctxtime+tmpdelay);
                     MIDI.chordOff(channel, [note1,note2], 4);
-                    console.log('small chord', note1, note2);
+                    //console.log('small chord', note1, note2);
                 }
             }else{
                 MIDI.noteOn(channel, notes[i], velocity, ctxtime+tmpdelay);
@@ -570,6 +601,7 @@ const isClose = (a,b) => {
 
   
 const on_click = (ev) => {
+    console.log('on_click function');
     var x, y;
     
         if (ev.layerX || ev.layerX == 0) { 
@@ -918,11 +950,18 @@ const randomlyPutHoles = (notesArr) => {
 }
 
 const randomlyGoHalfTime = () => {      
-    let mydelayT = Math.floor(Math.random() * 2);
-    let delayt = .3;
-    if(mydelayT === 1){
-        delayt = .15;
-    }
+    
+    console.log('tempo', tempo);
+    let delayt = tempo * .000125; //.3;
+    if ($('input[name=play_style2]:checked').val() == 'double') {
+        delayt = tempo * .0000625; //.15;
+    }else if ($('input[name=play_style2]:checked').val() == 'random') {
+        let mydelayT = Math.floor(Math.random() * 2);
+        if (mydelayT === 1) {
+            delayt = tempo * .0000625; //.15;
+        }
+    }    
+
     return delayt;
 }
 
